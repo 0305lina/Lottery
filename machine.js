@@ -15,8 +15,11 @@ class DrumPhysics {
     this.running = true;
     this.gravity = 0.48;
     this.friction = 0.988;
-    this.restitution = 0.58;
-    this.spinForce = 0.14;
+    this.restitution = 0.62;
+    this.vortexStrength = 0.32;
+    this.airLift = 0.54;
+    this.turbulence = 0.72;
+    this.windAngle = 0;
     this.measure();
     this.spawnBalls(DRUM_BALL_COUNT);
     this.tick = this.tick.bind(this);
@@ -56,7 +59,32 @@ class DrumPhysics {
     el.style.width = `${r * 2}px`;
     el.style.height = `${r * 2}px`;
     el.style.background = color;
+    const shine = document.createElement('span');
+    shine.className = 'phys-ball-shine';
+    el.appendChild(shine);
     return el;
+  }
+
+  applyAirflow(b) {
+    const dx = b.x - this.cx;
+    const dy = b.y - this.cy;
+    const dist = Math.hypot(dx, dy) || 1;
+    const nx = dx / dist;
+    const ny = dy / dist;
+
+    b.vx += -ny * this.vortexStrength;
+    b.vy += nx * this.vortexStrength;
+
+    const lift = this.airLift * (0.55 + (b.y - this.cy) / this.R * 0.65);
+    b.vy -= lift;
+
+    const pulse = Math.sin(this.windAngle * 1.4 + dist * 0.08) * 0.12;
+    b.vx += nx * (0.14 + pulse);
+    b.vy += ny * (0.1 + pulse * 0.6);
+
+    const turbA = this.windAngle + b.x * 0.07 + b.y * 0.05;
+    b.vx += Math.cos(turbA) * this.turbulence * 0.14 + (Math.random() - 0.5) * this.turbulence;
+    b.vy += Math.sin(turbA) * this.turbulence * 0.12 + (Math.random() - 0.5) * this.turbulence * 0.85;
   }
 
   setMixing(active) {
@@ -70,17 +98,15 @@ class DrumPhysics {
       this.measure();
     }
 
-    for (const b of this.balls) {
-      b.vy += this.gravity;
+    if (this.mixing) {
+      this.windAngle += 0.075;
+    }
 
+    for (const b of this.balls) {
       if (this.mixing) {
-        const dx = b.x - this.cx;
-        const dy = b.y - this.cy;
-        const dist = Math.hypot(dx, dy) || 1;
-        b.vx += (-dy / dist) * this.spinForce;
-        b.vy += (dx / dist) * this.spinForce;
-        b.vx += (Math.random() - 0.5) * 0.55;
-        b.vy += (Math.random() - 0.5) * 0.35;
+        this.applyAirflow(b);
+      } else {
+        b.vy += this.gravity;
       }
 
       b.vx *= this.friction;
@@ -113,7 +139,12 @@ class DrumPhysics {
         }
       }
 
-      b.el.style.transform = `translate3d(${b.x - b.r}px, ${b.y - b.r}px, 0)`;
+      const speed = Math.hypot(b.vx, b.vy);
+      if (speed > 0.4) {
+        b.roll = (b.roll || 0) + speed * 0.11;
+      }
+      const roll = b.roll || 0;
+      b.el.style.transform = `translate3d(${b.x - b.r}px, ${b.y - b.r}px, 0) rotate(${roll}rad)`;
     }
 
     requestAnimationFrame(this.tick);
@@ -219,9 +250,23 @@ export function createLottoMachine() {
       <div class="machine-drum-unit">
         <div class="machine-drum">
           <div class="drum-balls-world"></div>
+          <div class="drum-airflow" aria-hidden="true">
+            <div class="air-vortex"></div>
+            <div class="air-vortex air-vortex--reverse"></div>
+            <div class="air-particles">
+              <span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span>
+            </div>
+          </div>
           <div class="drum-glass"></div>
           <div class="drum-rim"></div>
           <div class="drum-chute-mouth" aria-hidden="true"></div>
+        </div>
+        <div class="drum-blower" aria-hidden="true">
+          <div class="blower-housing">
+            <div class="blower-blades"></div>
+          </div>
+          <div class="blower-grille"></div>
         </div>
       </div>
       <div class="machine-chute">
@@ -242,6 +287,7 @@ export function createLottoMachine() {
 
   const label = root.querySelector('.machine-label');
   const drum = root.querySelector('.machine-drum');
+  const blower = root.querySelector('.drum-blower');
   const assembly = root.querySelector('.machine-assembly');
   const chuteEl = root.querySelector('.machine-chute');
   const worldEl = root.querySelector('.drum-balls-world');
@@ -271,20 +317,24 @@ export function createLottoMachine() {
     setLabel(text) {
       label.textContent = text;
     },
+    setAirflow(active) {
+      drum.classList.toggle('mixing', active);
+      blower.classList.toggle('active', active);
+    },
     async mix(duration = 900) {
       const sim = ensurePhysics();
-      drum.classList.add('mixing');
+      this.setAirflow(true);
       sim.setMixing(true);
       await delay(duration);
     },
     async eject(num, { bonus = false } = {}) {
       const sim = ensurePhysics();
+      this.setAirflow(true);
       sim.setMixing(true);
-      drum.classList.add('mixing');
       await delay(380 + Math.random() * 120);
 
       sim.setMixing(false);
-      drum.classList.remove('mixing');
+      this.setAirflow(false);
       drum.classList.add('ejecting');
       chuteEl.classList.add('active');
 

@@ -409,6 +409,9 @@ a {
   order: 1;
   z-index: 2;
   margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .machine-drum {
@@ -423,11 +426,16 @@ a {
     inset 0 -16px 32px rgba(0, 0, 0, 0.45),
     inset 0 8px 20px rgba(255, 255, 255, 0.05),
     var(--shadow-dialog);
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.25s ease;
 }
 
 .machine-drum.mixing {
   animation: drumRock 0.28s ease-in-out infinite;
+  box-shadow:
+    inset 0 -16px 32px rgba(0, 0, 0, 0.45),
+    inset 0 8px 20px rgba(255, 255, 255, 0.05),
+    0 0 24px rgba(83, 157, 245, 0.18),
+    var(--shadow-dialog);
 }
 
 .machine-drum.ejecting {
@@ -443,6 +451,7 @@ a {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  z-index: 1;
 }
 
 .phys-ball {
@@ -458,6 +467,195 @@ a {
   pointer-events: none;
 }
 
+.phys-ball-shine {
+  position: absolute;
+  top: 18%;
+  left: 22%;
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  filter: blur(0.5px);
+  pointer-events: none;
+}
+
+/* Airflow inside drum */
+
+.drum-airflow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.machine-drum.mixing .drum-airflow {
+  opacity: 1;
+}
+
+.air-vortex {
+  position: absolute;
+  inset: -15%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(255, 255, 255, 0.04) 30deg,
+    transparent 60deg,
+    rgba(83, 157, 245, 0.08) 120deg,
+    transparent 150deg,
+    rgba(255, 255, 255, 0.05) 210deg,
+    transparent 240deg,
+    rgba(83, 157, 245, 0.06) 300deg,
+    transparent 330deg
+  );
+  animation: airVortexSpin 1.1s linear infinite;
+  filter: blur(2px);
+}
+
+.air-vortex--reverse {
+  inset: 5%;
+  opacity: 0.7;
+  animation-duration: 0.85s;
+  animation-direction: reverse;
+}
+
+@keyframes airVortexSpin {
+  to { transform: rotate(360deg); }
+}
+
+.air-particles {
+  position: absolute;
+  inset: 0;
+}
+
+.air-particles span {
+  position: absolute;
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  opacity: 0;
+  transform-origin: center center;
+}
+
+.machine-drum.mixing .air-particles span {
+  animation: airStreak 0.9s ease-in-out infinite;
+}
+
+.air-particles span:nth-child(1) { top: 22%; left: 18%; animation-delay: 0s; }
+.air-particles span:nth-child(2) { top: 38%; left: 62%; animation-delay: 0.12s; }
+.air-particles span:nth-child(3) { top: 58%; left: 24%; animation-delay: 0.24s; }
+.air-particles span:nth-child(4) { top: 70%; left: 55%; animation-delay: 0.36s; }
+.air-particles span:nth-child(5) { top: 30%; left: 42%; animation-delay: 0.08s; }
+.air-particles span:nth-child(6) { top: 48%; left: 12%; animation-delay: 0.2s; }
+.air-particles span:nth-child(7) { top: 64%; left: 68%; animation-delay: 0.32s; }
+.air-particles span:nth-child(8) { top: 44%; left: 78%; animation-delay: 0.44s; }
+
+@keyframes airStreak {
+  0% {
+    opacity: 0;
+    transform: rotate(0deg) translateX(0) scaleX(0.4);
+  }
+  30% {
+    opacity: 0.85;
+    transform: rotate(45deg) translateX(8px) scaleX(1);
+  }
+  70% {
+    opacity: 0.6;
+    transform: rotate(120deg) translateX(18px) scaleX(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(200deg) translateX(28px) scaleX(0.3);
+  }
+}
+
+/* Blower under drum */
+
+.drum-blower {
+  position: relative;
+  width: 72px;
+  height: 28px;
+  margin-top: -6px;
+  z-index: 1;
+}
+
+.blower-housing {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #2a2a2c 0%, #141416 100%);
+  border-radius: 0 0 10px 10px;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-top: none;
+  overflow: hidden;
+}
+
+.blower-blades {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border-radius: 50%;
+  background:
+    linear-gradient(0deg, transparent 44%, rgba(180, 180, 180, 0.35) 44%, rgba(180, 180, 180, 0.35) 56%, transparent 56%),
+    linear-gradient(90deg, transparent 44%, rgba(180, 180, 180, 0.35) 44%, rgba(180, 180, 180, 0.35) 56%, transparent 56%),
+    linear-gradient(45deg, transparent 44%, rgba(140, 140, 140, 0.25) 44%, rgba(140, 140, 140, 0.25) 56%, transparent 56%),
+    linear-gradient(-45deg, transparent 44%, rgba(140, 140, 140, 0.25) 44%, rgba(140, 140, 140, 0.25) 56%, transparent 56%);
+  opacity: 0.35;
+  transition: opacity 0.3s ease;
+}
+
+.drum-blower.active .blower-blades {
+  opacity: 1;
+  animation: blowerSpin 0.18s linear infinite;
+}
+
+@keyframes blowerSpin {
+  to { transform: rotate(360deg); }
+}
+
+.blower-grille {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 8px;
+  border-radius: 0 0 6px 6px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.5) 0px,
+    rgba(0, 0, 0, 0.5) 3px,
+    rgba(255, 255, 255, 0.06) 3px,
+    rgba(255, 255, 255, 0.06) 5px
+  );
+  z-index: 2;
+}
+
+.drum-blower.active::before {
+  content: '';
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 22px;
+  background: radial-gradient(ellipse at center bottom, rgba(83, 157, 245, 0.35), transparent 72%);
+  animation: airPuff 0.45s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes airPuff {
+  from { opacity: 0.45; transform: translateX(-50%) scaleY(0.85); }
+  to { opacity: 1; transform: translateX(-50%) scaleY(1.15); }
+}
+
 .drum-glass {
   position: absolute;
   inset: 0;
@@ -466,7 +664,7 @@ a {
     radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.18), transparent 42%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, transparent 50%);
   pointer-events: none;
-  z-index: 3;
+  z-index: 4;
 }
 
 .drum-rim {
@@ -475,7 +673,7 @@ a {
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.08);
   pointer-events: none;
-  z-index: 3;
+  z-index: 5;
 }
 
 .drum-chute-mouth {
@@ -489,7 +687,7 @@ a {
   border-radius: 0 0 12px 12px;
   border: 2px solid rgba(255, 255, 255, 0.1);
   border-top: none;
-  z-index: 4;
+  z-index: 6;
   pointer-events: none;
 }
 
