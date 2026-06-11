@@ -1,5 +1,4 @@
 const STORAGE_KEY = 'lottoSignupCompleted';
-const SESSION_DISMISS_KEY = 'lottoSignupDismissed';
 
 const overlayEl = document.getElementById('signupOverlay');
 const formEl = document.getElementById('signupForm');
@@ -11,12 +10,12 @@ const submitBtnEl = document.getElementById('signupSubmitBtn');
 const dismissBtnEl = document.getElementById('signupDismissBtn');
 const closeBtnEl = document.getElementById('signupCloseBtn');
 
+const isReady = Boolean(
+  overlayEl && formEl && nameEl && phoneEl && emailEl && errorEl && submitBtnEl && dismissBtnEl && closeBtnEl
+);
+
 function isSignedUp() {
   return localStorage.getItem(STORAGE_KEY) === 'true';
-}
-
-function wasDismissedThisSession() {
-  return sessionStorage.getItem(SESSION_DISMISS_KEY) === 'true';
 }
 
 function validateName(value) {
@@ -33,7 +32,7 @@ function validateEmail(value) {
 }
 
 function setError(message) {
-  errorEl.textContent = message || '';
+  if (errorEl) errorEl.textContent = message || '';
 }
 
 function setLoading(active) {
@@ -47,26 +46,29 @@ function setLoading(active) {
 }
 
 function openModal() {
-  overlayEl.hidden = false;
+  if (!isReady) return;
+  overlayEl.removeAttribute('hidden');
+  overlayEl.classList.add('is-open');
+  overlayEl.setAttribute('aria-hidden', 'false');
   document.body.classList.add('signup-open');
   requestAnimationFrame(() => nameEl.focus());
 }
 
-function closeModal({ dismissed = false } = {}) {
-  overlayEl.hidden = true;
+function closeModal() {
+  if (!isReady) return;
+  overlayEl.classList.remove('is-open');
+  overlayEl.setAttribute('hidden', '');
+  overlayEl.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('signup-open');
   setError('');
   formEl.reset();
-  if (dismissed) {
-    sessionStorage.setItem(SESSION_DISMISS_KEY, 'true');
-  }
 }
 
 export function promptSignupAfterNumbers(source = 'draw') {
-  if (isSignedUp() || wasDismissedThisSession()) return;
+  if (!isReady || isSignedUp()) return;
 
-  openModal();
   overlayEl.dataset.source = source;
+  setTimeout(openModal, 700);
 }
 
 async function handleSubmit(e) {
@@ -121,17 +123,17 @@ async function handleSubmit(e) {
   }
 }
 
-formEl.addEventListener('submit', handleSubmit);
-dismissBtnEl.addEventListener('click', () => closeModal({ dismissed: true }));
-closeBtnEl.addEventListener('click', () => closeModal({ dismissed: true }));
-overlayEl.addEventListener('click', (e) => {
-  if (e.target === overlayEl) {
-    closeModal({ dismissed: true });
-  }
-});
+if (isReady) {
+  formEl.addEventListener('submit', handleSubmit);
+  dismissBtnEl.addEventListener('click', closeModal);
+  closeBtnEl.addEventListener('click', closeModal);
+  overlayEl.addEventListener('click', (e) => {
+    if (e.target === overlayEl) closeModal();
+  });
 
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !overlayEl.hidden) {
-    closeModal({ dismissed: true });
-  }
-});
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlayEl.classList.contains('is-open')) {
+      closeModal();
+    }
+  });
+}

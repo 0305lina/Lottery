@@ -72,7 +72,7 @@ function appendMessage(role, content, extras = {}) {
   chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
 
   if (extras.numbers?.length === 6) {
-    setTimeout(() => promptSignupAfterNumbers('chatbot'), 600);
+    promptSignupAfterNumbers('chatbot');
   }
 }
 
