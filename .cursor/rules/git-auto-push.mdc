@@ -1,14 +1,14 @@
 ---
-description: 코드 변경 후 자동 Git 커밋 및 GitHub 푸시
+description: 작업 완료 시 자동 Git 커밋·푸시
 alwaysApply: true
 ---
 
-# Git 자동 푸시
+# Git 자동 커밋·푸시
 
-Lottery 프로젝트에서 코드를 수정·추가한 뒤 작업을 마치면 반드시:
+이 저장소(`Lottery/`)에서 파일을 수정·추가한 뒤 작업을 끝낼 때 **반드시**:
 
-1. `Lottery/` 디렉터리에서 변경 파일을 `git add` 한다.
-2. 변경 내용을 요약한 **한국어 커밋 메시지**로 `git commit` 한다.
-3. `git push origin main` 으로 GitHub에 푸시한다.
+1. 변경 파일 `git add`
+2. **한국어 커밋 메시지**로 `git commit`
+3. `git push origin main`
 
-커밋·푸시 없이 작업을 끝내지 않는다. 푸시 실패 시 사용자에게 알린다.
+커밋·푸시 없이 작업을 마치지 않는다. 푸시 실패 시 사용자에게 알린다.

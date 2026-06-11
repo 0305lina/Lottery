@@ -1,5 +1,3 @@
-const STORAGE_KEY = 'lottoSignupCompleted';
-
 const overlayEl = document.getElementById('signupOverlay');
 const formEl = document.getElementById('signupForm');
 const nameEl = document.getElementById('signupName');
@@ -15,10 +13,6 @@ const isReady = Boolean(
   overlayEl && formEl && nameEl && phoneEl && emailEl && errorEl && submitBtnEl && dismissBtnEl && closeBtnEl
 );
 
-function isSignedUp() {
-  return localStorage.getItem(STORAGE_KEY) === 'true';
-}
-
 function validateName(value) {
   return value.trim().length >= 2;
 }
@@ -32,31 +26,20 @@ function validateEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
-function setError(message, { success = false } = {}) {
+function setMessage(message, { success = false } = {}) {
   if (!errorEl) return;
   errorEl.textContent = message || '';
   errorEl.classList.toggle('is-success', success);
 }
 
 function setLoading(active) {
-  submitBtnEl.disabled = active || isSignedUp();
+  submitBtnEl.disabled = active;
   dismissBtnEl.disabled = active;
   closeBtnEl.disabled = active;
-  nameEl.disabled = active || isSignedUp();
-  phoneEl.disabled = active || isSignedUp();
-  emailEl.disabled = active || isSignedUp();
+  nameEl.disabled = active;
+  phoneEl.disabled = active;
+  emailEl.disabled = active;
   submitBtnEl.textContent = active ? '가입 중...' : '가입하기';
-}
-
-function updateSignedUpState() {
-  const signedUp = isSignedUp();
-  if (signedUp) {
-    setError('이미 가입이 완료되었습니다. 서비스 오픈 시 연락드릴게요!', { success: true });
-    submitBtnEl.disabled = true;
-    nameEl.disabled = true;
-    phoneEl.disabled = true;
-    emailEl.disabled = true;
-  }
 }
 
 function openModal() {
@@ -65,10 +48,7 @@ function openModal() {
   overlayEl.classList.add('is-open');
   overlayEl.setAttribute('aria-hidden', 'false');
   document.body.classList.add('signup-open');
-  updateSignedUpState();
-  if (!isSignedUp()) {
-    requestAnimationFrame(() => nameEl.focus());
-  }
+  requestAnimationFrame(() => nameEl.focus());
 }
 
 function closeModal() {
@@ -77,42 +57,38 @@ function closeModal() {
   overlayEl.setAttribute('hidden', '');
   overlayEl.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('signup-open');
-  if (!isSignedUp()) {
-    setError('');
-    formEl.reset();
-  }
+  setMessage('');
+  formEl.reset();
 }
 
 export function openSignupModal(source = 'sidebar') {
   if (!isReady) return;
   overlayEl.dataset.source = source;
-  if (!isSignedUp()) {
-    setError('');
-  }
+  setMessage('');
+  formEl.reset();
   openModal();
 }
 
 async function handleSubmit(e) {
   e.preventDefault();
-  if (isSignedUp()) return;
-  setError('');
+  setMessage('');
 
   const name = nameEl.value.trim();
   const phone = phoneEl.value.trim();
   const email = emailEl.value.trim();
 
   if (!validateName(name)) {
-    setError('이름을 2자 이상 입력해 주세요.');
+    setMessage('이름을 2자 이상 입력해 주세요.');
     nameEl.focus();
     return;
   }
   if (!validatePhone(phone)) {
-    setError('올바른 휴대폰 번호를 입력해 주세요. (예: 010-1234-5678)');
+    setMessage('올바른 휴대폰 번호를 입력해 주세요. (예: 010-1234-5678)');
     phoneEl.focus();
     return;
   }
   if (!validateEmail(email)) {
-    setError('올바른 이메일 주소를 입력해 주세요.');
+    setMessage('올바른 이메일 주소를 입력해 주세요.');
     emailEl.focus();
     return;
   }
@@ -136,11 +112,11 @@ async function handleSubmit(e) {
       throw new Error(data.error || '가입에 실패했습니다.');
     }
 
-    localStorage.setItem(STORAGE_KEY, 'true');
-    updateSignedUpState();
-    setError('가입이 완료되었습니다. AI 번호 추천 서비스 오픈 시 알려드릴게요!', { success: true });
+    setMessage(data.message || '가입이 완료되었습니다!', { success: true });
+    formEl.reset();
+    requestAnimationFrame(() => nameEl.focus());
   } catch (err) {
-    setError(err.message);
+    setMessage(err.message);
   } finally {
     setLoading(false);
   }
@@ -164,3 +140,5 @@ if (isReady) {
 if (signupNavBtnEl) {
   signupNavBtnEl.addEventListener('click', () => openSignupModal('sidebar'));
 }
+
+localStorage.removeItem('lottoSignupCompleted');
