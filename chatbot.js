@@ -1,5 +1,9 @@
 import { createBall } from './lotto-core.js';
 
+const chatWidgetEl = document.getElementById('chatWidget');
+const chatPanelEl = document.getElementById('chatPanel');
+const chatFabEl = document.getElementById('chatFab');
+const chatCloseBtnEl = document.getElementById('chatCloseBtn');
 const chatMessagesEl = document.getElementById('chatMessages');
 const chatFormEl = document.getElementById('chatForm');
 const chatInputEl = document.getElementById('chatInput');
@@ -12,6 +16,8 @@ const state = {
   birthDate: sessionStorage.getItem('lottoBirthDate') || null,
   messages: [],
   loading: false,
+  booted: false,
+  open: false,
 };
 
 function saveBirthDate(value) {
@@ -70,6 +76,21 @@ function setLoading(active) {
   chatSendBtnEl.disabled = active;
   chatInputEl.disabled = active;
   chatStatusEl.textContent = active ? '운세를 읽는 중...' : '';
+}
+
+function setPanelOpen(open) {
+  state.open = open;
+  chatPanelEl.hidden = !open;
+  chatFabEl.hidden = open;
+  chatFabEl.setAttribute('aria-expanded', String(open));
+  chatWidgetEl.classList.toggle('chat-widget--open', open);
+
+  if (open) {
+    if (!state.booted) {
+      bootChat();
+    }
+    requestAnimationFrame(() => chatInputEl.focus());
+  }
 }
 
 async function sendToApi(userText) {
@@ -137,6 +158,9 @@ async function handleSubmit(text) {
 }
 
 function bootChat() {
+  if (state.booted) return;
+  state.booted = true;
+
   const greeting = state.birthDate
     ? `안녕하세요! ${state.birthDate} 생년월일로 오늘의 운세를 반영한 번호를 추천해 드릴게요. "번호 추천해줘"라고 말씀해 보세요.`
     : '안녕하세요! 생년월일과 오늘의 운세를 바탕으로 로또 번호를 추천해 드려요. 먼저 생년월일을 YYYY-MM-DD 형식으로 알려주세요. (예: 1995-03-15)';
@@ -149,4 +173,11 @@ function bootChat() {
   });
 }
 
-bootChat();
+chatFabEl.addEventListener('click', () => setPanelOpen(true));
+chatCloseBtnEl.addEventListener('click', () => setPanelOpen(false));
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && state.open) {
+    setPanelOpen(false);
+  }
+});
