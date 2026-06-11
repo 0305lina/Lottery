@@ -147,7 +147,7 @@ export default async function handler(req, res) {
     .join('\n');
 
   const userContext = birthDate
-    ? `사용자 생년월일: ${birthDate} (이미 수집됨)`
+    ? `사용자 생년월일: ${birthDate} (현재 기준 — 대화에서 변경 요청이 있으면 최신 생년월일을 따르세요)`
     : '사용자 생년월일: 아직 없음 — 필요하면 물어보세요.';
 
   const prompt = `${userContext}
