@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>로또 번호 추첨</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="사이드바">
+      <div class="sidebar-logo">
+        <span class="logo-mark" aria-hidden="true"></span>
+        <span class="logo-text">Lottery</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#draw" class="nav-item nav-item--active">추첨</a>
+        <a href="#stats" class="nav-item">통계</a>
+        <a href="#history" class="nav-item">역대 당첨</a>
+      </nav>
+    </aside>
+
+    <div class="main-wrapper">
+      <main class="content">
+        <section id="draw" class="view-section">
+          <header class="view-header">
+            <h1 class="section-title">로또 번호 추첨</h1>
+            <p class="section-desc">1~45 중 중복 없이 6개 번호와 보너스 번호 1개를 추첨합니다</p>
+          </header>
+
+          <div class="card controls-card">
+            <div class="control-row">
+              <span class="body-bold">추첨 세트</span>
+              <div class="stepper" role="group" aria-label="추첨 세트 수">
+                <button type="button" id="decrease" class="stepper-btn" aria-label="세트 줄이기">−</button>
+                <output id="setCount" class="stepper-value" for="setCount">1</output>
+                <button type="button" id="increase" class="stepper-btn" aria-label="세트 늘리기">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="results" class="results" aria-live="polite"></div>
+        </section>
+
+        <section id="stats" class="view-section">
+          <header class="view-header">
+            <h2 class="section-title">가장 많이 나온 번호</h2>
+            <p id="statsDesc" class="section-desc">역대 1등 당첨번호 집계 중...</p>
+          </header>
+          <div id="topNumbersHighlight" class="top-numbers-highlight"></div>
+          <div id="numberStats" class="card stats-card"></div>
+        </section>
+
+        <section id="history" class="view-section">
+          <header class="view-header">
+            <h2 class="section-title">역대 1등 당첨번호</h2>
+            <p id="historyMeta" class="section-desc">불러오는 중...</p>
+          </header>
+
+          <div id="latestDraw" class="card highlight-card"></div>
+
+          <div class="card filter-card">
+            <div class="history-filters">
+              <label class="filter-field">
+                <span class="caption-bold field-label">회차 검색</span>
+                <input type="number" id="roundSearch" class="search-input" min="1" placeholder="예: 1227" inputmode="numeric">
+              </label>
+              <label class="filter-field">
+                <span class="caption-bold field-label">번호 포함</span>
+                <input type="number" id="numberFilter" class="search-input" min="1" max="45" placeholder="1~45" inputmode="numeric">
+              </label>
+              <button type="button" id="resetFilterBtn" class="btn-pill">초기화</button>
+            </div>
+          </div>
+
+          <div id="historyList" class="history-list"></div>
+          <button type="button" id="loadMoreBtn" class="btn-pill btn-pill--wide load-more-btn" hidden>더 보기</button>
+        </section>
+
+        <footer class="footer">
+          <p>본 추첨기는 오락용이며, 당첨을 보장하지 않습니다.</p>
+          <p>역대 당첨번호는 공개 데이터 기준이며, 정확한 정보는 동행복권에서 확인해 주세요.</p>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <div class="now-playing-bar">
+    <div class="now-playing-inner">
+      <p class="now-playing-label">행운의 번호를 뽑아보세요</p>
+      <button type="button" id="drawBtn" class="btn-play">추첨</button>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+  <script type="module" src="history.js"></script>
+</body>
+</html>
