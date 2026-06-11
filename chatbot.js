@@ -16,7 +16,7 @@ const state = {
   birthDate: sessionStorage.getItem('lottoBirthDate') || null,
   messages: [],
   loading: false,
-  booted: false,
+  greeted: false,
   open: false,
 };
 
@@ -78,6 +78,17 @@ function setLoading(active) {
   chatStatusEl.textContent = active ? '운세를 읽는 중...' : '';
 }
 
+function showGreetingIfNeeded() {
+  if (state.greeted) return;
+  state.greeted = true;
+
+  const greeting = state.birthDate
+    ? `안녕하세요! ${state.birthDate} 생년월일로 오늘의 운세를 반영한 번호를 추천해 드릴게요. "번호 추천해줘"라고 말씀해 보세요.`
+    : '안녕하세요! 생년월일과 오늘의 운세를 바탕으로 로또 번호를 추천해 드려요. 먼저 생년월일을 YYYY-MM-DD 형식으로 알려주세요. (예: 1995-03-15)';
+
+  appendMessage('assistant', greeting);
+}
+
 function setPanelOpen(open) {
   state.open = open;
   chatPanelEl.hidden = !open;
@@ -86,9 +97,7 @@ function setPanelOpen(open) {
   chatWidgetEl.classList.toggle('chat-widget--open', open);
 
   if (open) {
-    if (!state.booted) {
-      bootChat();
-    }
+    showGreetingIfNeeded();
     requestAnimationFrame(() => chatInputEl.focus());
   }
 }
@@ -120,24 +129,32 @@ async function handleSubmit(text) {
 
   if (!state.birthDate) {
     const parsed = parseBirthDate(trimmed);
-    if (parsed) {
-      saveBirthDate(parsed);
+    if (!parsed) {
       appendMessage('user', trimmed);
       chatInputEl.value = '';
-      setLoading(true);
-      try {
-        const data = await sendToApi(`내 생년월일은 ${parsed}이야. 오늘 운세에 맞는 로또 번호를 추천해줘.`);
-        appendMessage('assistant', data.reply, {
-          numbers: data.numbers,
-          bonus: data.bonus,
-        });
-      } catch (err) {
-        appendMessage('assistant', err.message);
-      } finally {
-        setLoading(false);
-      }
+      appendMessage(
+        'assistant',
+        '생년월일을 YYYY-MM-DD 형식으로 입력해 주세요.\n예: 1995-03-15, 1995.3.15, 1995/03/15'
+      );
       return;
     }
+
+    saveBirthDate(parsed);
+    appendMessage('user', trimmed);
+    chatInputEl.value = '';
+    setLoading(true);
+    try {
+      const data = await sendToApi(`내 생년월일은 ${parsed}이야. 오늘 운세에 맞는 로또 번호를 추천해줘.`);
+      appendMessage('assistant', data.reply, {
+        numbers: data.numbers,
+        bonus: data.bonus,
+      });
+    } catch (err) {
+      appendMessage('assistant', err.message);
+    } finally {
+      setLoading(false);
+    }
+    return;
   }
 
   appendMessage('user', trimmed);
@@ -157,24 +174,18 @@ async function handleSubmit(text) {
   }
 }
 
-function bootChat() {
-  if (state.booted) return;
-  state.booted = true;
-
-  const greeting = state.birthDate
-    ? `안녕하세요! ${state.birthDate} 생년월일로 오늘의 운세를 반영한 번호를 추천해 드릴게요. "번호 추천해줘"라고 말씀해 보세요.`
-    : '안녕하세요! 생년월일과 오늘의 운세를 바탕으로 로또 번호를 추천해 드려요. 먼저 생년월일을 YYYY-MM-DD 형식으로 알려주세요. (예: 1995-03-15)';
-
-  appendMessage('assistant', greeting);
-
-  chatFormEl.addEventListener('submit', (e) => {
-    e.preventDefault();
-    handleSubmit(chatInputEl.value);
-  });
+function onFormSubmit(e) {
+  e.preventDefault();
+  handleSubmit(chatInputEl.value);
 }
 
 chatFabEl.addEventListener('click', () => setPanelOpen(true));
 chatCloseBtnEl.addEventListener('click', () => setPanelOpen(false));
+chatFormEl.addEventListener('submit', onFormSubmit);
+chatSendBtnEl.addEventListener('click', (e) => {
+  e.preventDefault();
+  onFormSubmit(e);
+});
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && state.open) {
