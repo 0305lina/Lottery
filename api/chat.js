@@ -125,6 +125,9 @@ export default async function handler(req, res) {
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
+  // #region agent log
+  fetch('http://127.0.0.1:7817/ingest/ad9fb65c-2094-4cdc-b76a-efbaee009d2e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c93616'},body:JSON.stringify({sessionId:'c93616',location:'api/chat.js:handler',message:'gemini env check',data:{hasGeminiKey:Boolean(apiKey),keyPrefix:apiKey?apiKey.slice(0,3):null,vercelEnv:process.env.VERCEL_ENV||null},timestamp:Date.now(),hypothesisId:'A-B'})}).catch(()=>{});
+  // #endregion
   if (!apiKey) {
     return res.status(500).json({
       error: 'GEMINI_API_KEY 환경변수가 설정되지 않았습니다. Vercel 대시보드에서 추가해 주세요.',
