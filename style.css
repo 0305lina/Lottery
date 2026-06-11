@@ -969,6 +969,118 @@ a {
   animation: none;
 }
 
+/* Chatbot */
+
+.chat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 420px;
+  padding: 16px;
+}
+
+.chat-messages {
+  flex: 1;
+  min-height: 300px;
+  max-height: 480px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 4px;
+}
+
+.chat-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 88%;
+}
+
+.chat-msg--user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.chat-msg--assistant {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.chat-bubble {
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chat-msg--user .chat-bubble {
+  background: var(--green);
+  color: #000;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-msg--assistant .chat-bubble {
+  background: var(--bg-elevated);
+  color: var(--text-base);
+  border-bottom-left-radius: 4px;
+}
+
+.chat-balls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.chat-plus {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.chat-status {
+  min-height: 18px;
+  font-size: 12px;
+  color: var(--green);
+  padding: 0 4px;
+}
+
+.chat-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chat-input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-base);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.chat-input:focus {
+  border-color: var(--green);
+}
+
+.chat-input:disabled {
+  opacity: 0.6;
+}
+
+.chat-send {
+  flex-shrink: 0;
+}
+
 /* Empty state */
 
 .empty-state {
@@ -1301,8 +1413,9 @@ a {
   }
 
   .sidebar-nav .nav-item:nth-child(1)::before { content: '추첨'; font-size: 11px; }
-  .sidebar-nav .nav-item:nth-child(2)::before { content: '통계'; font-size: 11px; }
-  .sidebar-nav .nav-item:nth-child(3)::before { content: '역대'; font-size: 11px; }
+  .sidebar-nav .nav-item:nth-child(2)::before { content: '챗봇'; font-size: 11px; }
+  .sidebar-nav .nav-item:nth-child(3)::before { content: '통계'; font-size: 11px; }
+  .sidebar-nav .nav-item:nth-child(4)::before { content: '역대'; font-size: 11px; }
 
   .main-wrapper {
     margin-left: 72px;

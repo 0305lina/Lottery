@@ -15,6 +15,7 @@
       </div>
       <nav class="sidebar-nav">
         <a href="#draw" class="nav-item nav-item--active">추첨</a>
+        <a href="#chat" class="nav-item">운세 챗봇</a>
         <a href="#stats" class="nav-item">통계</a>
         <a href="#history" class="nav-item">역대 당첨</a>
       </nav>
@@ -40,6 +41,29 @@
           </div>
 
           <div id="results" class="results" aria-live="polite"></div>
+        </section>
+
+        <section id="chat" class="view-section">
+          <header class="view-header">
+            <h2 class="section-title">운세 챗봇</h2>
+            <p class="section-desc">생년월일과 오늘의 운세를 반영해 AI가 로또 번호를 추천합니다</p>
+          </header>
+
+          <div class="card chat-card">
+            <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+            <p id="chatStatus" class="chat-status" aria-live="polite"></p>
+            <form id="chatForm" class="chat-form">
+              <input
+                type="text"
+                id="chatInput"
+                class="chat-input"
+                placeholder="메시지 입력... (생년월일: 1995-03-15)"
+                autocomplete="off"
+                maxlength="500"
+              >
+              <button type="submit" id="chatSendBtn" class="btn-pill chat-send">전송</button>
+            </form>
+          </div>
         </section>
 
         <section id="stats" class="view-section">
@@ -94,5 +118,6 @@
 
   <script type="module" src="app.js"></script>
   <script type="module" src="history.js"></script>
+  <script type="module" src="chatbot.js"></script>
 </body>
 </html>
