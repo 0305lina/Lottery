@@ -3,6 +3,7 @@ import {
   createSpinningBall,
 } from './lotto-core.js';
 import { createLottoMachine } from './machine.js';
+import { promptSignupAfterNumbers } from './signup-modal.js';
 
 const MAX_NUMBER = 45;
 const PICK_COUNT = 6;
@@ -134,6 +135,7 @@ async function animateDraw() {
   }
 
   drawBtn.disabled = false;
+  promptSignupAfterNumbers('draw');
 }
 
 function delay(ms) {

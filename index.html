@@ -123,6 +123,37 @@
     </button>
   </div>
 
+  <div class="signup-overlay" id="signupOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="signupTitle">
+    <div class="signup-modal">
+      <button type="button" id="signupCloseBtn" class="signup-close-btn" aria-label="닫기">×</button>
+      <div class="signup-badge">Coming Soon</div>
+      <h2 id="signupTitle" class="signup-title">AI 로또 번호 추천 서비스</h2>
+      <p class="signup-desc">
+        앞으로 AI가 생년월일·운세·통계를 분석해 맞춤 로또 번호를 추천해 드릴 예정이에요.
+        오픈 알림을 받으려면 미리 가입해 주세요.
+      </p>
+      <form id="signupForm" class="signup-form" novalidate>
+        <label class="signup-field">
+          <span class="signup-label">이름</span>
+          <input type="text" id="signupName" class="signup-input" placeholder="홍길동" autocomplete="name" maxlength="30" required>
+        </label>
+        <label class="signup-field">
+          <span class="signup-label">전화번호</span>
+          <input type="tel" id="signupPhone" class="signup-input" placeholder="010-1234-5678" autocomplete="tel" inputmode="tel" maxlength="13" required>
+        </label>
+        <label class="signup-field">
+          <span class="signup-label">이메일</span>
+          <input type="email" id="signupEmail" class="signup-input" placeholder="you@email.com" autocomplete="email" maxlength="80" required>
+        </label>
+        <p id="signupError" class="signup-error" aria-live="polite"></p>
+        <div class="signup-actions">
+          <button type="button" id="signupDismissBtn" class="btn-pill signup-dismiss">나중에</button>
+          <button type="submit" id="signupSubmitBtn" class="btn-pill signup-submit">가입하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script type="module" src="app.js"></script>
   <script type="module" src="history.js"></script>
   <script type="module" src="chatbot.js"></script>

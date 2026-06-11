@@ -1,4 +1,5 @@
 import { createBall } from './lotto-core.js';
+import { promptSignupAfterNumbers } from './signup-modal.js';
 
 const chatWidgetEl = document.getElementById('chatWidget');
 const chatPanelEl = document.getElementById('chatPanel');
@@ -69,6 +70,10 @@ function appendMessage(role, content, extras = {}) {
 
   chatMessagesEl.appendChild(row);
   chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+
+  if (extras.numbers?.length === 6) {
+    setTimeout(() => promptSignupAfterNumbers('chatbot'), 600);
+  }
 }
 
 function setLoading(active) {
