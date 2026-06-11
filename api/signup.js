@@ -1,3 +1,5 @@
+import { getSupabaseAdmin } from '../lib/supabase-server.js';
+
 function validateName(name) {
   return typeof name === 'string' && name.trim().length >= 2;
 }
@@ -21,6 +23,13 @@ function normalizePhone(phone) {
     return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
   }
   return digits;
+}
+
+function mapSupabaseError(error) {
+  if (error.code === '23505') {
+    return '이미 가입된 이메일입니다.';
+  }
+  return '가입 정보 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
 }
 
 export default async function handler(req, res) {
@@ -52,14 +61,31 @@ export default async function handler(req, res) {
     name: name.trim(),
     phone: normalizePhone(phone),
     email: email.trim().toLowerCase(),
-    source,
-    createdAt: new Date().toISOString(),
+    source: String(source).slice(0, 32),
   };
 
-  console.log('[signup]', JSON.stringify(lead));
+  try {
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase.from('signup_leads').insert(lead);
 
-  return res.status(201).json({
-    ok: true,
-    message: '가입이 완료되었습니다. AI 번호 추천 서비스 오픈 시 알려드릴게요!',
-  });
+    if (error) {
+      console.error('[signup] Supabase error:', error);
+      return res.status(500).json({ error: mapSupabaseError(error) });
+    }
+
+    return res.status(201).json({
+      ok: true,
+      message: '가입이 완료되었습니다. AI 번호 추천 서비스 오픈 시 알려드릴게요!',
+    });
+  } catch (err) {
+    console.error('[signup] error:', err);
+    if (err.message === 'SUPABASE_NOT_CONFIGURED') {
+      return res.status(500).json({
+        error: 'Supabase 환경변수(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)가 설정되지 않았습니다.',
+      });
+    }
+    return res.status(500).json({
+      error: '가입 정보 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+    });
+  }
 }
