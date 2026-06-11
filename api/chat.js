@@ -1,6 +1,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const MODEL = 'gemini-2.5-flash-lite';
+const MODELS = [
+  process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+];
 
 function buildSystemPrompt(today) {
   return `당신은 한국 로또 6/45 번호를 추천하는 친근한 운세 챗봇입니다.
@@ -47,6 +51,64 @@ function validateNumbers(numbers, bonus) {
     }
   }
   return { numbers: sorted, bonus: bonus ?? null };
+}
+
+function shouldTryNextModel(err) {
+  const status = err.status ?? err.response?.status;
+  const message = String(err.message || '');
+  if (status === 401 || status === 403) return false;
+  if (status === 429 || message.includes('429') || message.includes('quota')) return true;
+  if (status === 404 || message.includes('not found')) return true;
+  return false;
+}
+
+function getErrorMessage(err) {
+  const status = err.status ?? err.response?.status;
+  const message = String(err.message || '');
+
+  if (status === 429 || message.includes('429') || message.includes('quota')) {
+    return 'Gemini API 일일 무료 사용량(20회/모델)을 모두 초과했습니다. 내일 다시 시도하거나 Google AI Studio에서 결제를 활성화해 주세요.';
+  }
+  if (status === 401 || status === 403 || message.includes('API key')) {
+    return 'Gemini API 키가 유효하지 않습니다. Vercel의 GEMINI_API_KEY 환경변수를 확인해 주세요.';
+  }
+  if (status === 404 || message.includes('not found')) {
+    return '요청한 AI 모델을 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.';
+  }
+  return 'AI 응답 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+}
+
+function isRetryable(err) {
+  return shouldTryNextModel(err);
+}
+
+async function generateWithFallback(genAI, prompt, systemInstruction) {
+  const uniqueModels = [...new Set(MODELS.filter(Boolean))];
+  let lastError = null;
+
+  for (const modelName of uniqueModels) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction,
+        generationConfig: {
+          responseMimeType: 'application/json',
+          temperature: 0.9,
+        },
+      });
+
+      const result = await model.generateContent(prompt);
+      return { text: result.response.text(), modelName };
+    } catch (err) {
+      lastError = err;
+      console.error(`Gemini API error (${modelName}):`, err.message);
+      if (!shouldTryNextModel(err)) {
+        throw err;
+      }
+    }
+  }
+
+  throw lastError;
 }
 
 export default async function handler(req, res) {
@@ -97,19 +159,8 @@ ${historyText || '(없음)'}
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: MODEL,
-      systemInstruction: buildSystemPrompt(today),
-      generationConfig: {
-        responseMimeType: 'application/json',
-        temperature: 0.9,
-      },
-    });
-
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    const { text } = await generateWithFallback(genAI, prompt, buildSystemPrompt(today));
     const parsed = parseModelJson(text);
-
     const validated = validateNumbers(parsed.numbers, parsed.bonus);
 
     return res.status(200).json({
@@ -120,8 +171,9 @@ ${historyText || '(없음)'}
     });
   } catch (err) {
     console.error('Gemini API error:', err);
-    return res.status(500).json({
-      error: 'AI 응답 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+    const status = isRetryable(err) ? 429 : 500;
+    return res.status(status).json({
+      error: getErrorMessage(err),
     });
   }
 }
