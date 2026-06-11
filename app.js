@@ -49,9 +49,26 @@ function showEmptyState() {
   `;
 }
 
-async function animateResultCard(card, result, label, setIndex) {
+function createResultCard(setIndex) {
+  const card = document.createElement('div');
+  card.className = 'result-card';
+
+  const label = document.createElement('div');
+  label.className = 'result-label';
+  label.textContent = setCount > 1 ? `${setIndex + 1}번째 세트 · 추첨 결과 대기 중...` : '추첨 결과 대기 중...';
+  card.appendChild(label);
+
+  const balls = document.createElement('div');
+  balls.className = 'balls';
+  card.appendChild(balls);
+
+  return { card, label, balls };
+}
+
+async function animateResultCard(card, result, setIndex) {
   const labelEl = card.querySelector('.result-label');
   const balls = card.querySelector('.balls');
+  balls.innerHTML = '';
 
   const mainSpinners = Array.from({ length: PICK_COUNT }, () => createSpinningBall());
   mainSpinners.forEach((spinner) => balls.appendChild(spinner.element));
@@ -64,9 +81,7 @@ async function animateResultCard(card, result, label, setIndex) {
   const bonusSpinner = createSpinningBall();
   balls.appendChild(createBonusSpinnerWrap(bonusSpinner));
 
-  labelEl.textContent = label;
-
-  await delay(INITIAL_SPIN_MS + setIndex * 120);
+  await delay(INITIAL_SPIN_MS + setIndex * 80);
 
   await Promise.all(
     mainSpinners.map((spinner, i) =>
@@ -77,40 +92,37 @@ async function animateResultCard(card, result, label, setIndex) {
   await delay(350);
   await bonusSpinner.stop(result.bonus);
 
-  labelEl.textContent = setIndex > 0 || setCount > 1 ? `${setIndex + 1}번째 세트 · 추첨 결과` : '추첨 결과';
+  labelEl.textContent = setCount > 1 ? `${setIndex + 1}번째 세트 · 추첨 결과` : '추첨 결과';
 }
 
 async function animateDraw() {
   drawBtn.disabled = true;
   resultsEl.innerHTML = '';
 
+  const session = document.createElement('div');
+  session.className = 'draw-session';
+
+  const machine = createLottoMachine();
+  machine.setLabel(setCount > 1 ? '1번째 세트 추첨 중' : '추첨기에서 번호를 뽑는 중');
+  session.appendChild(machine.element);
+  machine.init();
+
+  const resultsList = document.createElement('div');
+  resultsList.className = 'draw-results-list';
+  session.appendChild(resultsList);
+
+  resultsEl.appendChild(session);
+
   for (let s = 0; s < setCount; s++) {
-    const drawSet = document.createElement('div');
-    drawSet.className = 'draw-set';
-
-    const machine = createLottoMachine();
-    machine.setLabel(setCount > 1 ? `${s + 1}번째 세트 · 추첨기` : '추첨기에서 번호를 뽑는 중');
-    drawSet.appendChild(machine.element);
-    machine.init();
-
-    const card = document.createElement('div');
-    card.className = 'result-card';
-
-    const label = document.createElement('div');
-    label.className = 'result-label';
-    label.textContent = '추첨 결과 대기 중...';
-    card.appendChild(label);
-
-    const balls = document.createElement('div');
-    balls.className = 'balls';
-    card.appendChild(balls);
-
-    drawSet.appendChild(card);
-    resultsEl.appendChild(drawSet);
+    const { card } = createResultCard(s);
+    resultsList.appendChild(card);
 
     const result = drawNumbers();
 
-    await machine.mix(900);
+    machine.setLabel(setCount > 1 ? `${s + 1}번째 세트 추첨 중` : '추첨기에서 번호를 뽑는 중');
+    machine.resetTray();
+
+    await machine.mix(s === 0 ? 900 : 650);
 
     for (const num of result.pickOrder) {
       await machine.eject(num);
@@ -118,20 +130,16 @@ async function animateDraw() {
     }
 
     await delay(400);
-    machine.setLabel('보너스 번호 추첨');
+    machine.setLabel(setCount > 1 ? `${s + 1}번째 세트 · 보너스 번호` : '보너스 번호 추첨');
     await machine.eject(result.bonus, { bonus: true });
 
-    machine.setLabel('추첨 완료');
-    await delay(500);
-    machine.destroy();
-
-    await animateResultCard(
-      card,
-      result,
-      setCount > 1 ? `${s + 1}번째 세트 · 추첨 결과` : '추첨 결과',
-      s
-    );
+    await delay(350);
+    await animateResultCard(card, result, s);
   }
+
+  machine.setLabel(setCount > 1 ? '전체 추첨 완료' : '추첨 완료');
+  await delay(500);
+  machine.destroy();
 
   drawBtn.disabled = false;
 }

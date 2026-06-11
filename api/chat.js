@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { buildBirthProfile } from '../lib/fortune.js';
 
 const MODELS = [
   process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
@@ -12,10 +13,11 @@ function buildSystemPrompt(today) {
 
 역할:
 1. 사용자에게 생년월일(YYYY-MM-DD)을 아직 모르면 먼저 물어보세요.
-2. 생년월일을 알면 띠, 별자리, 오늘의 운세를 반영해 로또 번호 6개(1~45, 중복 없음)와 보너스 1개를 추천하세요.
-3. 왜 이 번호를 골랐는지 생년월일·오늘 운세·행운의 의미를 한국어로 따뜻하게 설명하세요.
-4. 번호 추천이 아닌 일반 질문에도 친절히 답하되, 로또·운세 맥락을 유지하세요.
-5. 당첨을 보장하지 않으며 오락·참고용임을 가끔 상기하세요.
+2. 생년월일을 알면 프롬프트에 제공된 띠·별자리(서버 계산값)와 오늘의 운세를 반영해 로또 번호 6개(1~45, 중복 없음)와 보너스 1개를 추천하세요.
+3. 왜 이 번호를 골랐는지 생년월일·띠·별자리·오늘 운세·행운의 의미를 한국어로 따뜻하게 설명하세요.
+4. 띠·별자리는 반드시 프롬프트에 적힌 값만 사용하세요. 임의로 바꾸거나 추측하지 마세요.
+5. 번호 추천이 아닌 일반 질문에도 친절히 답하되, 로또·운세 맥락을 유지하세요.
+6. 당첨을 보장하지 않으며 오락·참고용임을 가끔 상기하세요.
 
 반드시 아래 JSON 형식만 출력하세요. 다른 텍스트는 포함하지 마세요.
 {
@@ -146,8 +148,12 @@ export default async function handler(req, res) {
     .map((m) => `${m.role === 'user' ? '사용자' : '챗봇'}: ${m.content}`)
     .join('\n');
 
-  const userContext = birthDate
-    ? `사용자 생년월일: ${birthDate} (현재 기준 — 대화에서 변경 요청이 있으면 최신 생년월일을 따르세요)`
+  const birthProfile = birthDate ? buildBirthProfile(birthDate) : null;
+  const userContext = birthProfile
+    ? `사용자 생년월일: ${birthProfile.birthDate}
+띠: ${birthProfile.zodiac} (반드시 이 값 사용)
+별자리: ${birthProfile.constellation} (반드시 이 값 사용)
+※ 띠·별자리는 서버에서 생년월일로 계산한 정확한 값입니다. 다른 띠/별자리를 말하지 마세요.`
     : '사용자 생년월일: 아직 없음 — 필요하면 물어보세요.';
 
   const prompt = `${userContext}
@@ -168,6 +174,13 @@ ${historyText || '(없음)'}
       needsBirthDate: Boolean(parsed.needsBirthDate),
       numbers: validated?.numbers ?? null,
       bonus: validated?.bonus ?? null,
+      birthProfile: birthProfile
+        ? {
+            birthDate: birthProfile.birthDate,
+            zodiac: birthProfile.zodiac,
+            constellation: birthProfile.constellation,
+          }
+        : null,
     });
   } catch (err) {
     console.error('Gemini API error:', err);

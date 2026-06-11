@@ -21,6 +21,7 @@ const API_URL = '/api/chat';
 
 const state = {
   birthDate: sessionStorage.getItem('lottoBirthDate') || null,
+  birthProfile: null,
   messages: [],
   loading: false,
   greeted: false,
@@ -70,7 +71,14 @@ function saveBirthDate(value) {
 
 function clearBirthDate() {
   state.birthDate = null;
+  state.birthProfile = null;
   sessionStorage.removeItem('lottoBirthDate');
+  updateBirthDateUi();
+}
+
+function applyBirthProfile(profile) {
+  if (!profile?.birthDate) return;
+  state.birthProfile = profile;
   updateBirthDateUi();
 }
 
@@ -78,7 +86,10 @@ function updateBirthDateUi() {
   if (!chatBirthDateEl || !chatBirthResetBtnEl) return;
 
   if (state.birthDate) {
-    chatBirthDateEl.textContent = `현재 생년월일: ${state.birthDate}`;
+    const fortune = state.birthProfile
+      ? ` · ${state.birthProfile.zodiac} · ${state.birthProfile.constellation}`
+      : '';
+    chatBirthDateEl.textContent = `현재 생년월일: ${state.birthDate}${fortune}`;
     chatBirthDateEl.removeAttribute('hidden');
     chatBirthResetBtnEl.removeAttribute('hidden');
     chatInputEl.placeholder = '메시지 입력... (생년월일 변경: 1995-03-15)';
@@ -175,6 +186,7 @@ async function sendToApi(userText) {
   }
 
   state.messages.push({ role: 'assistant', content: data.reply });
+  applyBirthProfile(data.birthProfile);
   return data;
 }
 

@@ -372,6 +372,13 @@ export function createLottoMachine() {
 
       await delay(220);
     },
+    resetTray() {
+      trayMain.querySelectorAll('.tray-slot').forEach((slot) => {
+        slot.classList.remove('filled');
+        slot.innerHTML = '';
+      });
+      trayBonusSlot.innerHTML = '';
+    },
     destroy() {
       if (physics) {
         physics.destroy();

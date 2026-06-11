@@ -376,11 +376,18 @@ a {
   gap: 12px;
 }
 
-.draw-set {
+.draw-set,
+.draw-session {
   display: flex;
   flex-direction: column;
   gap: 12px;
   animation: fadeUp 0.35s ease backwards;
+}
+
+.draw-results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 @keyframes fadeUp {
