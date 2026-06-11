@@ -9,6 +9,7 @@ const errorEl = document.getElementById('signupError');
 const submitBtnEl = document.getElementById('signupSubmitBtn');
 const dismissBtnEl = document.getElementById('signupDismissBtn');
 const closeBtnEl = document.getElementById('signupCloseBtn');
+const signupNavBtnEl = document.getElementById('signupNavBtn');
 
 const isReady = Boolean(
   overlayEl && formEl && nameEl && phoneEl && emailEl && errorEl && submitBtnEl && dismissBtnEl && closeBtnEl
@@ -31,18 +32,31 @@ function validateEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
-function setError(message) {
-  if (errorEl) errorEl.textContent = message || '';
+function setError(message, { success = false } = {}) {
+  if (!errorEl) return;
+  errorEl.textContent = message || '';
+  errorEl.classList.toggle('is-success', success);
 }
 
 function setLoading(active) {
-  submitBtnEl.disabled = active;
+  submitBtnEl.disabled = active || isSignedUp();
   dismissBtnEl.disabled = active;
   closeBtnEl.disabled = active;
-  nameEl.disabled = active;
-  phoneEl.disabled = active;
-  emailEl.disabled = active;
+  nameEl.disabled = active || isSignedUp();
+  phoneEl.disabled = active || isSignedUp();
+  emailEl.disabled = active || isSignedUp();
   submitBtnEl.textContent = active ? '가입 중...' : '가입하기';
+}
+
+function updateSignedUpState() {
+  const signedUp = isSignedUp();
+  if (signedUp) {
+    setError('이미 가입이 완료되었습니다. 서비스 오픈 시 연락드릴게요!', { success: true });
+    submitBtnEl.disabled = true;
+    nameEl.disabled = true;
+    phoneEl.disabled = true;
+    emailEl.disabled = true;
+  }
 }
 
 function openModal() {
@@ -51,7 +65,10 @@ function openModal() {
   overlayEl.classList.add('is-open');
   overlayEl.setAttribute('aria-hidden', 'false');
   document.body.classList.add('signup-open');
-  requestAnimationFrame(() => nameEl.focus());
+  updateSignedUpState();
+  if (!isSignedUp()) {
+    requestAnimationFrame(() => nameEl.focus());
+  }
 }
 
 function closeModal() {
@@ -60,19 +77,24 @@ function closeModal() {
   overlayEl.setAttribute('hidden', '');
   overlayEl.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('signup-open');
-  setError('');
-  formEl.reset();
+  if (!isSignedUp()) {
+    setError('');
+    formEl.reset();
+  }
 }
 
-export function promptSignupAfterNumbers(source = 'draw') {
-  if (!isReady || isSignedUp()) return;
-
+export function openSignupModal(source = 'sidebar') {
+  if (!isReady) return;
   overlayEl.dataset.source = source;
-  setTimeout(openModal, 700);
+  if (!isSignedUp()) {
+    setError('');
+  }
+  openModal();
 }
 
 async function handleSubmit(e) {
   e.preventDefault();
+  if (isSignedUp()) return;
   setError('');
 
   const name = nameEl.value.trim();
@@ -105,7 +127,7 @@ async function handleSubmit(e) {
         name,
         phone,
         email,
-        source: overlayEl.dataset.source || 'draw',
+        source: overlayEl.dataset.source || 'sidebar',
       }),
     });
 
@@ -115,7 +137,8 @@ async function handleSubmit(e) {
     }
 
     localStorage.setItem(STORAGE_KEY, 'true');
-    closeModal();
+    updateSignedUpState();
+    setError('가입이 완료되었습니다. AI 번호 추천 서비스 오픈 시 알려드릴게요!', { success: true });
   } catch (err) {
     setError(err.message);
   } finally {
@@ -136,4 +159,8 @@ if (isReady) {
       closeModal();
     }
   });
+}
+
+if (signupNavBtnEl) {
+  signupNavBtnEl.addEventListener('click', () => openSignupModal('sidebar'));
 }

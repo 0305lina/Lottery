@@ -138,6 +138,32 @@ a {
   background: var(--bg-elevated);
 }
 
+.nav-signup-btn {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--green);
+  color: #000;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.nav-signup-btn:hover {
+  filter: brightness(1.06);
+  transform: scale(1.01);
+}
+
+.nav-signup-btn:active {
+  transform: scale(0.98);
+}
+
 .main-wrapper {
   flex: 1;
   margin-left: var(--sidebar-w);
@@ -975,11 +1001,15 @@ a {
   position: fixed;
   right: 24px;
   bottom: calc(var(--now-playing-h) + 20px + env(safe-area-inset-bottom));
-  z-index: 250;
+  z-index: 450;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 12px;
+}
+
+.chat-widget:not(.chat-widget--open) .chat-panel {
+  pointer-events: none;
 }
 
 .chat-fab {
@@ -1017,14 +1047,26 @@ a {
 .chat-panel {
   width: min(380px, calc(100vw - 32px));
   height: min(520px, calc(100vh - var(--now-playing-h) - 100px));
-  display: flex;
+  display: none;
   flex-direction: column;
   background: var(--bg-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-dialog);
   border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
+}
+
+.chat-panel.is-open {
+  display: flex;
   animation: chatPanelIn 0.22s ease;
+}
+
+.chat-panel[hidden] {
+  display: none !important;
+}
+
+.chat-fab[hidden] {
+  display: none !important;
 }
 
 @keyframes chatPanelIn {
@@ -1073,6 +1115,8 @@ a {
   line-height: 1;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
+  position: relative;
+  z-index: 2;
 }
 
 .chat-close-btn:hover {
@@ -1210,10 +1254,12 @@ body.signup-open {
   padding: 24px 16px;
   background: rgba(0, 0, 0, 0.72);
   backdrop-filter: blur(4px);
+  pointer-events: none;
 }
 
 .signup-overlay.is-open {
   display: flex;
+  pointer-events: auto;
   animation: signupFadeIn 0.2s ease;
 }
 
@@ -1341,6 +1387,10 @@ body.signup-open {
   min-height: 18px;
   font-size: 13px;
   color: var(--negative);
+}
+
+.signup-error.is-success {
+  color: var(--green);
 }
 
 .signup-actions {
@@ -1698,6 +1748,20 @@ body.signup-open {
     text-align: center;
   }
 
+  .nav-signup-btn {
+    font-size: 0;
+    padding: 12px;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .nav-signup-btn::before {
+    content: '가입';
+    font-size: 11px;
+    font-weight: 700;
+    display: block;
+  }
+
   .nav-item::before {
     font-size: 10px;
     font-weight: 700;
@@ -1706,9 +1770,9 @@ body.signup-open {
     display: block;
   }
 
-  .sidebar-nav .nav-item:nth-child(1)::before { content: '추첨'; font-size: 11px; }
-  .sidebar-nav .nav-item:nth-child(2)::before { content: '통계'; font-size: 11px; }
-  .sidebar-nav .nav-item:nth-child(3)::before { content: '역대'; font-size: 11px; }
+  .sidebar-nav .nav-item:nth-child(2)::before { content: '추첨'; font-size: 11px; }
+  .sidebar-nav .nav-item:nth-child(3)::before { content: '통계'; font-size: 11px; }
+  .sidebar-nav .nav-item:nth-child(4)::before { content: '역대'; font-size: 11px; }
 
   .main-wrapper {
     margin-left: 72px;

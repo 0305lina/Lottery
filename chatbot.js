@@ -1,5 +1,4 @@
 import { createBall } from './lotto-core.js';
-import { promptSignupAfterNumbers } from './signup-modal.js';
 
 const chatWidgetEl = document.getElementById('chatWidget');
 const chatPanelEl = document.getElementById('chatPanel');
@@ -10,6 +9,11 @@ const chatFormEl = document.getElementById('chatForm');
 const chatInputEl = document.getElementById('chatInput');
 const chatSendBtnEl = document.getElementById('chatSendBtn');
 const chatStatusEl = document.getElementById('chatStatus');
+
+const isChatReady = Boolean(
+  chatWidgetEl && chatPanelEl && chatFabEl && chatCloseBtnEl &&
+  chatMessagesEl && chatFormEl && chatInputEl && chatSendBtnEl && chatStatusEl
+);
 
 const API_URL = '/api/chat';
 
@@ -70,10 +74,6 @@ function appendMessage(role, content, extras = {}) {
 
   chatMessagesEl.appendChild(row);
   chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
-
-  if (extras.numbers?.length === 6) {
-    promptSignupAfterNumbers('chatbot');
-  }
 }
 
 function setLoading(active) {
@@ -95,15 +95,22 @@ function showGreetingIfNeeded() {
 }
 
 function setPanelOpen(open) {
+  if (!isChatReady) return;
+
   state.open = open;
-  chatPanelEl.hidden = !open;
-  chatFabEl.hidden = open;
-  chatFabEl.setAttribute('aria-expanded', String(open));
   chatWidgetEl.classList.toggle('chat-widget--open', open);
+  chatFabEl.setAttribute('aria-expanded', String(open));
 
   if (open) {
+    chatPanelEl.removeAttribute('hidden');
+    chatPanelEl.classList.add('is-open');
+    chatFabEl.setAttribute('hidden', '');
     showGreetingIfNeeded();
     requestAnimationFrame(() => chatInputEl.focus());
+  } else {
+    chatPanelEl.classList.remove('is-open');
+    chatPanelEl.setAttribute('hidden', '');
+    chatFabEl.removeAttribute('hidden');
   }
 }
 
@@ -184,16 +191,22 @@ function onFormSubmit(e) {
   handleSubmit(chatInputEl.value);
 }
 
-chatFabEl.addEventListener('click', () => setPanelOpen(true));
-chatCloseBtnEl.addEventListener('click', () => setPanelOpen(false));
-chatFormEl.addEventListener('submit', onFormSubmit);
-chatSendBtnEl.addEventListener('click', (e) => {
-  e.preventDefault();
-  onFormSubmit(e);
-});
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && state.open) {
+if (isChatReady) {
+  chatFabEl.addEventListener('click', () => setPanelOpen(true));
+  chatCloseBtnEl.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     setPanelOpen(false);
-  }
-});
+  });
+  chatFormEl.addEventListener('submit', onFormSubmit);
+  chatSendBtnEl.addEventListener('click', (e) => {
+    e.preventDefault();
+    onFormSubmit(e);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && state.open) {
+      setPanelOpen(false);
+    }
+  });
+}
